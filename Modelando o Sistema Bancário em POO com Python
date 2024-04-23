@@ -1,46 +1,40 @@
-import textwrap  # Importa textwrap para formatação de texto
-from abc import ABC, abstractclassmethod, abstractproperty  # Importa ABC e decorators para classes abstratas
-from datetime import datetime  # Importa datetime para manipulação de datas
+import textwrap
+from abc import ABC, abstractclassmethod, abstractproperty
+from datetime import datetime
 
-# Classe base para Cliente
+
 class Cliente:
     def __init__(self, endereco):
-        self.endereco = endereco  # Define o endereço do cliente
-        self.contas = []  # Inicializa a lista de contas do cliente
+        self.endereco = endereco
+        self.contas = []
 
-    # Realiza uma transação para uma conta específica
     def realizar_transacao(self, conta, transacao):
         transacao.registrar(conta)
 
-    # Adiciona uma conta à lista de contas do cliente
     def adicionar_conta(self, conta):
         self.contas.append(conta)
 
 
-# Classe para Pessoa Física, derivada de Cliente
 class PessoaFisica(Cliente):
     def __init__(self, nome, data_nascimento, cpf, endereco):
-        super().__init__(endereco)  # Chama o construtor da classe base
-        self.nome = nome  # Define o nome da pessoa física
-        self.data_nascimento = data_nascimento  # Define a data de nascimento
-        self.cpf = cpf  # Define o CPF
+        super().__init__(endereco)
+        self.nome = nome
+        self.data_nascimento = data_nascimento
+        self.cpf = cpf
 
 
-# Classe base para Conta
 class Conta:
     def __init__(self, numero, cliente):
-        self._saldo = 0  # Saldo inicial da conta é zero
-        self._numero = numero  # Define o número da conta
-        self._agencia = "0001"  # Define a agência da conta
-        self._cliente = cliente  # Define o cliente da conta
-        self._historico = Historico()  # Inicializa o histórico de transações da conta
+        self._saldo = 0
+        self._numero = numero
+        self._agencia = "0001"
+        self._cliente = cliente
+        self._historico = Historico()
 
-    # Método de classe para criar uma nova conta
     @classmethod
     def nova_conta(cls, cliente, numero):
         return cls(numero, cliente)
 
-    # Propriedades para acessar os atributos protegidos
     @property
     def saldo(self):
         return self._saldo
@@ -61,7 +55,6 @@ class Conta:
     def historico(self):
         return self._historico
 
-    # Realiza um saque na conta
     def sacar(self, valor):
         saldo = self.saldo
         excedeu_saldo = valor > saldo
@@ -79,7 +72,6 @@ class Conta:
 
         return False
 
-    # Realiza um depósito na conta
     def depositar(self, valor):
         if valor > 0:
             self._saldo += valor
@@ -91,14 +83,12 @@ class Conta:
         return True
 
 
-# Classe para Conta Corrente, derivada de Conta
 class ContaCorrente(Conta):
     def __init__(self, numero, cliente, limite=500, limite_saques=3):
-        super().__init__(numero, cliente)  # Chama o construtor da classe base
-        self._limite = limite  # Define o limite de crédito da conta corrente
-        self._limite_saques = limite_saques  # Define o limite de saques da conta corrente
+        super().__init__(numero, cliente)
+        self._limite = limite
+        self._limite_saques = limite_saques
 
-    # Realiza um saque considerando o limite e o limite de saques
     def sacar(self, valor):
         numero_saques = len(
             [transacao for transacao in self.historico.transacoes if transacao["tipo"] == Saque.__name__]
@@ -118,7 +108,6 @@ class ContaCorrente(Conta):
 
         return False
 
-    # Retorna uma representação em string da conta corrente
     def __str__(self):
         return f"""\
             Agência:\t{self.agencia}
@@ -127,17 +116,14 @@ class ContaCorrente(Conta):
         """
 
 
-# Classe para Histórico de Transações
 class Historico:
     def __init__(self):
-        self._transacoes = []  # Inicializa a lista de transações
+        self._transacoes = []
 
-    # Propriedade para acessar as transações
     @property
     def transacoes(self):
         return self._transacoes
 
-    # Adiciona uma transação ao histórico
     def adicionar_transacao(self, transacao):
         self._transacoes.append(
             {
@@ -148,7 +134,6 @@ class Historico:
         )
 
 
-# Classe abstrata para Transação
 class Transacao(ABC):
     @property
     @abstractproperty
@@ -160,16 +145,14 @@ class Transacao(ABC):
         pass
 
 
-# Classe para Saque, derivada de Transação
 class Saque(Transacao):
     def __init__(self, valor):
-        self._valor = valor  # Define o valor do saque
+        self._valor = valor
 
     @property
     def valor(self):
         return self._valor
 
-    # Registra um saque na conta
     def registrar(self, conta):
         sucesso_transacao = conta.sacar(self.valor)
 
@@ -177,16 +160,14 @@ class Saque(Transacao):
             conta.historico.adicionar_transacao(self)
 
 
-# Classe para Depósito, derivada de Transação
 class Deposito(Transacao):
     def __init__(self, valor):
-        self._valor = valor  # Define o valor do depósito
+        self._valor = valor
 
     @property
     def valor(self):
         return self._valor
 
-    # Registra um depósito na conta
     def registrar(self, conta):
         sucesso_transacao = conta.depositar(self.valor)
 
@@ -194,7 +175,6 @@ class Deposito(Transacao):
             conta.historico.adicionar_transacao(self)
 
 
-# Função para exibir o menu de opções
 def menu():
     menu = """\n
     ================ MENU ================
@@ -209,13 +189,11 @@ def menu():
     return input(textwrap.dedent(menu))
 
 
-# Função para filtrar cliente por CPF
 def filtrar_cliente(cpf, clientes):
     clientes_filtrados = [cliente for cliente in clientes if cliente.cpf == cpf]
     return clientes_filtrados[0] if clientes_filtrados else None
 
 
-# Função para recuperar a conta do cliente
 def recuperar_conta_cliente(cliente):
     if not cliente.contas:
         print("\n@@@ Cliente não possui conta! @@@")
@@ -225,7 +203,6 @@ def recuperar_conta_cliente(cliente):
     return cliente.contas[0]
 
 
-# Função para realizar depósito
 def depositar(clientes):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -244,7 +221,6 @@ def depositar(clientes):
     cliente.realizar_transacao(conta, transacao)
 
 
-# Função para realizar saque
 def sacar(clientes):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -263,7 +239,6 @@ def sacar(clientes):
     cliente.realizar_transacao(conta, transacao)
 
 
-# Função para exibir extrato da conta
 def exibir_extrato(clientes):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -291,7 +266,6 @@ def exibir_extrato(clientes):
     print("==========================================")
 
 
-# Função para criar um novo cliente
 def criar_cliente(clientes):
     cpf = input("Informe o CPF (somente número): ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -311,7 +285,6 @@ def criar_cliente(clientes):
     print("\n=== Cliente criado com sucesso! ===")
 
 
-# Função para criar uma nova conta
 def criar_conta(numero_conta, clientes, contas):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
@@ -327,22 +300,19 @@ def criar_conta(numero_conta, clientes, contas):
     print("\n=== Conta criada com sucesso! ===")
 
 
-# Função para listar todas as contas
 def listar_contas(contas):
     for conta in contas:
         print("=" * 100)
         print(textwrap.dedent(str(conta)))
 
 
-# Função principal
 def main():
-    clientes = []  # Lista para armazenar os clientes
-    contas = []  # Lista para armazenar as contas
+    clientes = []
+    contas = []
 
     while True:
-        opcao = menu()  # Exibe o menu e obtém a opção escolhida pelo usuário
+        opcao = menu()
 
-        # Executa a opção escolhida pelo usuário
         if opcao == "d":
             depositar(clientes)
 
@@ -363,11 +333,10 @@ def main():
             listar_contas(contas)
 
         elif opcao == "q":
-            break  # Encerra o programa
+            break
 
         else:
             print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
 
 
-if __name__ == "__main__":
-    main()  # Chama a função principal
+main()
